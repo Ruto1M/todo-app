@@ -14,16 +14,35 @@ function App() {
   }, [todos]);
 
   const [newTodo, setNewTodo] = useState('');
+  const [editingId, setEditingId] = useState(null);
+
 
   const addTodo = () => {
-    if (newTodo.trim() === '') return;
+    const trimmed = newTodo.trim();
+    if (trimmed === '') return;
 
-    setTodos(prev => [
-      ...prev,
-      { id: Date.now(), text: newTodo.trim(), done: false },
-    ]);
+    if (editingId) {
+      setTodos(prev =>
+        prev.map(todo =>
+          todo.id === editingId ? { ...todo, text: trimmed } : todo
+        )
+      );
+      setEditingId(null); // Exit edit mode
+    } else {
+      setTodos(prev => [
+        ...prev,
+        { id: Date.now(), text: trimmed, done: false },
+      ]);
+    }
+
     setNewTodo('');
   };
+
+  const startEditing = (todo) => {
+  setNewTodo(todo.text);
+  setEditingId(todo.id);
+  };
+
 
   const toggleTodo = (id) => {
     setTodos(prev =>
@@ -60,8 +79,22 @@ function App() {
             onKeyDown={e => e.key === 'Enter' && addTodo()}
             style={styles.input}
           />
-          <button onClick={addTodo} style={styles.addButton}>Add</button>
+          <button onClick={addTodo} style={styles.addButton}>
+            {editingId ? 'Update' : 'Add'}
+          </button>
+          {editingId && (
+            <button
+              onClick={() => {
+                setEditingId(null);
+                setNewTodo('');
+              }}
+              style={{ ...styles.addButton, backgroundColor: '#aaa', marginLeft: 8 }}
+            >
+              Cancel
+            </button>
+          )}
         </div>
+
 
         <ul style={styles.list}>
           {todos.map(todo => (
@@ -97,26 +130,52 @@ function App() {
                     </svg>
                   )}
                 </span>
-                <span style={{
-                  marginLeft: 12,
-                  textDecoration: todo.done ? 'line-through' : 'none',
-                  color: todo.done ? '#bbb' : '#333',
-                  userSelect: 'none',
-                  fontSize: 16,
-                }}>
+                <span
+                  onClick={() => startEditing(todo)}
+                  style={{
+                    marginLeft: 12,
+                    textDecoration: todo.done ? 'line-through' : 'none',
+                    color: todo.done ? '#bbb' : '#333',
+                    userSelect: 'none',
+                    fontSize: 16,
+                    cursor: 'pointer',
+                  }}
+                >
                   {todo.text}
                 </span>
               </label>
-              <button
-                onClick={() => deleteTodo(todo.id)}
-                style={styles.deleteButton}
-                aria-label={`Delete ${todo.text}`}
-              >
-                ×
-              </button>
+
+              <div style={{ display: 'flex', gap: 8, marginLeft: 16 }}>
+                <button
+                  onClick={() => startEditing(todo)}
+                  style={styles.editButton}
+                  aria-label={`Edit ${todo.text}`}
+                >
+                  <svg xmlns="http://www.w3.org/2000/svg"
+                    width="15" 
+                    height="15" 
+                    viewBox="0 0 24 24" 
+                    fill="none" 
+                    stroke="#a30407" 
+                    strokeWidth="2" 
+                    strokeLinecap="round" 
+                    strokeLinejoin="round">
+                    <path d="M20 14.66V20a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h5.34"></path>
+                    <polygon points="18 2 22 6 12 16 8 16 8 12 18 2"></polygon>
+                  </svg>
+                </button>
+                <button
+                  onClick={() => deleteTodo(todo.id)}
+                  style={styles.deleteButton}
+                  aria-label={`Delete ${todo.text}`}
+                >
+                  ×
+                </button>
+              </div>
             </li>
           ))}
         </ul>
+
       </div>
     </div>
   );
@@ -151,22 +210,89 @@ const styles = {
     fontSize: 16,
     outline: 'none',
   },
-  addButton: {
-    backgroundColor: '#764ba2',
+  // addButton: {
+  //   backgroundColor: '#764ba2',
+  //   color: '#fff',
+  //   border: 'none',
+  //   padding: '0 24px',
+  //   cursor: 'pointer',
+  //   fontSize: 16,
+  //   fontWeight: '600',
+  //   borderRadius: 0,
+  //   transition: 'background-color 0.3s',
+  // },
+  // cancelButton: {
+  //   backgroundColor: '#aaa', // grayish
+  //   color: '#333',
+  //   border: 'none',
+  //   padding: '0 24px',
+  //   cursor: 'pointer',
+  //   fontSize: 16,
+  //   fontWeight: '600',
+  //   borderRadius: 4,
+  //   transition: 'background-color 0.3s',
+  //   marginLeft: 8,
+  // },
+  editButton: {
+    backgroundColor: 'transparent',
+    border: 'none',
+    padding: 0,
+    margin: 0,
+    cursor: 'pointer',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    width: 32,
+    height: 32,
+    borderRadius: 4,
+    transition: 'background-color 0.2s',
+  },
+
+  updateButton: {
+    backgroundColor: '#764ba2', // purple
     color: '#fff',
     border: 'none',
     padding: '0 24px',
     cursor: 'pointer',
     fontSize: 16,
     fontWeight: '600',
-    borderRadius: 0,
+    borderRadius: 4,       // smoother radius for better look
     transition: 'background-color 0.3s',
+    marginLeft: 8,         // some spacing if next to cancel
   },
+
+  
+  addButton: {
+    backgroundColor: '#764ba2',
+    color: '#fff',
+    border: 'none',
+    padding: '10px',
+    cursor: 'pointer',
+    fontSize: 16,
+    fontWeight: '600',
+    borderRadius: 50,          // big radius to make pill shape
+    transition: 'background-color 0.3s',
+    userSelect: 'none',
+  },
+
+  cancelButton: {
+    backgroundColor: '#aaa',
+    color: '#333',
+    border: 'none',
+    padding: '10px 28px',     
+    cursor: 'pointer',
+    fontSize: 16,
+    fontWeight: '600',
+    transition: 'background-color 0.3s',
+    marginLeft: 0,
+    userSelect: 'none',
+  },
+
   list: {
     listStyle: 'none',
     paddingLeft: 0,
     margin: 0,
-    maxHeight: 320,
+    maxHeight: 700,
     overflowY: 'auto',
   },
   listItem: {
