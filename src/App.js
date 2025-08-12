@@ -1,10 +1,18 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 
 function App() {
-  const [todos, setTodos] = useState([
-    { id: 1, text: 'Learn React', done: false },
-    { id: 2, text: 'Build a todo app', done: false },
-  ]);
+  const [todos, setTodos] = useState(() => {
+    const saved = localStorage.getItem('todos');
+    return saved ? JSON.parse(saved) : [
+      { id: 1, text: 'Learn React', done: false },
+      { id: 2, text: 'Build a todo app', done: false },
+    ];
+  });
+
+  useEffect(() => {
+    localStorage.setItem('todos', JSON.stringify(todos));
+  }, [todos]);
+
   const [newTodo, setNewTodo] = useState('');
 
   const addTodo = () => {
@@ -32,7 +40,16 @@ function App() {
   return (
     <div style={styles.page}>
       <div style={styles.container}>
-        <h1 style={{ textAlign: 'center', marginBottom: 30, color: '#fff' }}>Todo List</h1>
+        <h1 style={{ 
+          textAlign: 'center', 
+          marginBottom: 30, 
+          color: '#000', 
+          textShadow: '0 2px 6px rgba(0,0,0,0.6)',
+          fontWeight: '700',
+          fontSize: '2.5rem',
+        }}>
+          Todo List
+        </h1>
 
         <div style={styles.inputContainer}>
           <input
@@ -108,11 +125,10 @@ function App() {
 const styles = {
   page: {
     minHeight: '100vh',
-    background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
     display: 'flex',
     justifyContent: 'center',
-    alignItems: 'center',
-    padding: 20,
+    paddingTop: 80,
+    paddingBottom: 40,
   },
   container: {
     backgroundColor: 'rgba(255, 255, 255, 0.95)',
